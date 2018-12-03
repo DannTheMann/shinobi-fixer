@@ -1,0 +1,20 @@
+{
+
+    "manifest_version": 2,
+    "name": "ShinobiFixer",
+    "version": "1.0",
+  
+    "description": "Fixes Shinobi",
+  
+    "icons": {
+      "48": "icons/border-48.png"
+    },
+  
+    "content_scripts": [
+      {
+        "matches": ["*://*.mozilla.org/*", "*://windacres.asuscomm.com/*"],
+        "js": ["shinobi.js"]
+      }
+    ]
+  
+  }
