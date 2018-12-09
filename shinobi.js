@@ -12,7 +12,7 @@ var feeds = [
     new Feed("House",8,0),
 
     /* Middle row */
-    new Feed("Garden",0,4,4,5),
+    new Feed("LowerYard",0,4,4,5),
     new Feed("UpperYard",4,4,4,5),
     new Feed("OutsideSandschool",8,4,4,5),
 
