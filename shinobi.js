@@ -2,6 +2,7 @@
 var MINUTES = 15;
 var TIME_BETWEEN_PAGE_REFRESH = (1000 * 60) * MINUTES;
 var SECONDS_BETWEEN_FEED_LOAD_ATTEMPTS = 5000;
+var SECONDS_BEFORE_CORRECTION = 5000;
 
 /* All camera feeds */
 var feeds = [
@@ -11,14 +12,14 @@ var feeds = [
     new Feed("House",8,0),
 
     /* Middle row */
-    new Feed("Garden",0,4),
-    new Feed("UpperYard",4,4),
-    new Feed("OutsideSandschool",8,4),
+    new Feed("Garden",0,4,4,5),
+    new Feed("UpperYard",4,4,4,5),
+    new Feed("OutsideSandschool",8,4,4,5),
 
     /* Bottom row */
-    new Feed("Chickens",0,8),
-    new Feed("IndoorSandschool",4,8),
-    new Feed("OutsideSalTacroom",8,8)
+    new Feed("Chickens",0,9),
+    new Feed("IndoorSandschool",4,9),
+    new Feed("OutsideSalTacroom",8,9)
 ];
 
 /* Side bar menu from burger menu */
@@ -47,7 +48,21 @@ function Feed(id, loc_x, loc_y, width=4, height=4){
         this.element.setAttribute("data-gs-width", this.size_x);
         this.element.setAttribute("data-gs-height", this.size_y);
         return 1;
-	}
+    }
+    
+    this.correct = function(){
+        var set = true;
+        if(this.element.getAttribute("data-gs-width") != this.size_x){
+            this.element.setAttribute("data-gs-width", this.size_x);
+            set = false;
+        }
+        console.log("ID: " + this.id + " [x=" + this.element.getAttribute("data-gs-height") + " | 2b=" + this.size_y);
+        if(this.element.getAttribute("data-gs-height") != this.size_y){
+            this.element.setAttribute("data-gs-height", this.size_y);
+            set = false;
+        }
+        return set;
+    }
 
 }
 
@@ -76,17 +91,25 @@ function removeHeader(){
     }
 }
 
+function correctCameras(){
+    console.log("Feed: correcting cameras.")
+    for(var i = 0; i < feeds.length; i++){
+        if(!feeds[i].correct()){
+            console.log("Feed: Failed to correct camera '" + feeds[i].id + "'.");
+            setTimeout(function(){correctCameras();}, SECONDS_BEFORE_CORRECTION);
+        }
+    }
+}
+
 /* Order the camera feeds */
 function orderCameras(){
     console.log("Feed: Ordering cameras (" + feeds.length + ")");
-    var success = 0;
+    //var success = 0;
     for(var i = 0; i < feeds.length; i++){
-        success += feeds[i].apply();
-    }
-    if(success != feeds.length){
-        console.log("Feed: Failed on more than 5 feeds. Retrying in " +
-         SECONDS_BETWEEN_FEED_LOAD_ATTEMPTS + " seconds.");
-        setTimeout(function(){orderCameras();}, SECONDS_BETWEEN_FEED_LOAD_ATTEMPTS);
+        if(feeds[i].apply() == 0){
+            setTimeout(function(){orderCameras();}, SECONDS_BETWEEN_FEED_LOAD_ATTEMPTS);
+            return;
+        }
     }
 }
 
