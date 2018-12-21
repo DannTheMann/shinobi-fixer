@@ -6,10 +6,6 @@
   
     "description": "Fixes Shinobi",
   
-    "icons": {
-      "48": "icons/border-48.png"
-    },
-  
     "content_scripts": [
       {
         "matches": ["*://windacres.asuscomm.com/*", "*://192.168.1.132/*"],
