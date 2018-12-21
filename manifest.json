@@ -2,10 +2,10 @@
 
     "manifest_version": 2,
     "name": "ShinobiFixer",
-    "version": "1.0",
+    "version": "1.1",
   
     "description": "Fixes Shinobi",
-  
+
     "content_scripts": [
       {
         "matches": ["*://windacres.asuscomm.com/*", "*://192.168.1.132/*"],

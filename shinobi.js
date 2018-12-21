@@ -12,20 +12,20 @@ var feeds = [
     new Feed("House",8,0),
 
     /* Middle row */
-    new Feed("LowerYard",0,4,4,5),
-    new Feed("UpperYard",4,4,4,5),
-    new Feed("OutsideSandschool",8,4,4,5),
+    new Feed("LowerYard",0,6,4,5),
+    new Feed("UpperYard",4,6,4,5),
+    new Feed("OutsideSandschool",8,6,4,5),
 
     /* Bottom row */
-    new Feed("Chickens",0,9),
-    new Feed("IndoorSandschool",4,9),
-    new Feed("OutsideSalTacroom",8,9)
+    new Feed("Chickens",0,12),
+    new Feed("IndoorSandschool",4,12),
+    new Feed("OutsideSalTacroom",8,12)
 ];
 
 /* Side bar menu from burger menu */
 var SideBarElement = document.getElementsByClassName("demo-layout")[0];
 
-function Feed(id, loc_x, loc_y, width=4, height=4){
+function Feed(id, loc_x, loc_y, width=4, height=6){
     this.id = id;
     this.location_x = loc_x;
     this.location_y = loc_y;
