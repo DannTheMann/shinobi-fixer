@@ -12,14 +12,14 @@ var feeds = [
     new Feed("House",8,0),
 
     /* Middle row */
-    new Feed("LowerYard",0,6,4,5),
-    new Feed("UpperYard",4,6,4,5),
-    new Feed("OutsideSandschool",8,6,4,5),
+    new Feed("LowerYard",0,6,4,7),
+    new Feed("UpperYard",4,6,4,7),
+    new Feed("OutsideSandschool",8,6,4,7),
 
     /* Bottom row */
-    new Feed("Chickens",0,12),
-    new Feed("IndoorSandschool",4,12),
-    new Feed("OutsideSalTacroom",8,12)
+    new Feed("Chickens",0,13),
+    new Feed("IndoorSandschool",4,13),
+    new Feed("OutsideSalTacroom",8,13)
 ];
 
 /* Side bar menu from burger menu */
