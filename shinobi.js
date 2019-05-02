@@ -1,15 +1,23 @@
 
+
+var SHUFFLE_SWITCH  = 10000;
+var SHUFFLE_MONITOR = "Inside";
 var MINUTES = 15;
 var TIME_BETWEEN_PAGE_REFRESH = (1000 * 60) * MINUTES;
 var SECONDS_BETWEEN_FEED_LOAD_ATTEMPTS = 5000;
 var SECONDS_BEFORE_CORRECTION = 5000;
 
+var currentShuffleMonitor = null;
+var shuffleMonitor = null;
+var spareMonitors = [];
+var shuffleCounter = 0;
+
 /* All camera feeds */
 var feeds = [
     /* Top row */
-    new Feed("TopDriveGate",0,0),
+    new Feed("TopDrive",0,0),
     new Feed("Drive",4,0),
-    new Feed("House",8,0),
+    new Feed("OutsideHouse",8,0),
 
     /* Middle row */
     new Feed("LowerYard",0,6,4,7),
@@ -18,8 +26,8 @@ var feeds = [
 
     /* Bottom row */
     new Feed("Chickens",0,13),
-    new Feed("IndoorSandschool",4,13),
-    new Feed("OutsideSalTacroom",8,13)
+    new Feed("InsideSandschool",4,13),
+    new Feed("TopYard",8,13)
 ];
 
 /* Side bar menu from burger menu */
@@ -111,6 +119,7 @@ function orderCameras(){
             return;
         }
     }
+    shuffleFeed();
 }
 
 /* Attempt to go into fullscreen */
@@ -143,10 +152,81 @@ function openFullscreen() {
     return false;
   }
 
+function shuffleFeed(){
+    console.log("Organising shuffle feed.")
+    /* Shuffle bottom middle camera with any feeds not mentioning in our dict */
+    monitors = document.querySelectorAll('[id^="monitor_live_"]');
+    console.log("Monitors found: " + monitors + " [ " + monitors.length + "] -> SM: " + SHUFFLE_MONITOR);
+    spareMonitors.push(document.querySelector('[id^=monitor_live_' + SHUFFLE_MONITOR + ']'));
+
+    /* Find every monitor that isn't hardcoded into a set position */
+    monitors.forEach(monitorID => {
+        
+        var monitorStable = false;
+
+        feeds.forEach(feed => {
+
+            /* This monitor is hardcoded to a location, don't touch it */
+            if(feed.element.id == monitorID.id){
+                 monitorStable = true;
+            }
+
+        });
+
+        if(!monitorStable){
+            console.log("Shuffle: Adding monitor - " + monitorID.id);
+            spareMonitors.push(monitorID);
+        }
+    
+        /* Find our hard coded position for the shuffling to occur at */
+        if(monitorID.id == document.querySelector('[id^=monitor_live_' + SHUFFLE_MONITOR + ']').id)
+        {
+            currentShuffleMonitor = monitorID;
+            console.log("Shuffle: Found " + monitorID.id);
+            console.log("Shuffle: Size " + monitorID.id 
+            + " X: " + currentShuffleMonitor.getAttribute("data-gs-x")
+            + " Y: " + currentShuffleMonitor.getAttribute("data-gs-y")
+            + " SizeX: " + currentShuffleMonitor.getAttribute("data-gs-width")
+            + " SizeY: " + currentShuffleMonitor.getAttribute("data-gs-height"));
+        }
+
+    });
+
+    /* Find every monitor that isn't hardcoded into a set position */
+    spareMonitors.forEach(monitorID => {
+        console.log("Shuffle: Organising " + monitorID.id)
+        monitorID.setAttribute("data-gs-x", currentShuffleMonitor.getAttribute("data-gs-x"));
+        monitorID.setAttribute("data-gs-y", currentShuffleMonitor.getAttribute("data-gs-y"));
+        monitorID.setAttribute("data-gs-width", currentShuffleMonitor.getAttribute("data-gs-width"));
+        monitorID.setAttribute("data-gs-height", currentShuffleMonitor.getAttribute("data-gs-height"));
+    });
+
+    console.log("Shuffle: Total Shuffle Monitors: " + spareMonitors.length)
+    console.log("Shuffle: Current - " + currentShuffleMonitor.id);
+
+    // Recursively timeout to change the spare monitor display
+
+    setTimeout(function(){spareMonitorDisplay()}, SHUFFLE_SWITCH);
+}
+
+function spareMonitorDisplay(){
+
+    console.log("Shuffle: spareMonitorDisplay " + currentShuffleMonitor.id);
+    // hide existing monitor
+    currentShuffleMonitor.style.zIndex = "0"; 
+
+    currentShuffleMonitor = spareMonitors[(++shuffleCounter) % spareMonitors.length];
+    
+    currentShuffleMonitor.style.zIndex = "1"; 
+
+    setTimeout(function(){spareMonitorDisplay();}, SHUFFLE_SWITCH);
+}
+
 function main(){
     goIntoFullScreen();
     removeHeader();
     orderCameras();
+
     /* Refresh the page */
     setTimeout(function(){
         window.location=window.location;
@@ -155,18 +235,3 @@ function main(){
 
 console.log("Start: Starting Shinobi fixer plugin.");
 main();
-
-// #monitor_live_ChickensGoatseaff39c862be7cc759914c7b4cf31e23
-
-// <div id="monitor_live_ChickensGoatseaff39c862be7cc759914c7b4cf31e23" 
-// auth="eaff39c862be7cc759914c7b4cf31e23" 
-// mid="ChickensGoats" ke="WOl7fEkhr7" 
-// mode="Record" 
-// class="grid-stack-item monitor_item glMChickensGoatseaff39c862be7cc759914c7b4cf31e23 ui-draggable ui-resizable ui-resizable-autohide" 
-
-// data-gs-y="4" 
-// data-gs-width="4"
-// data-gs-auto-position="yes" 
-// data-gs-x="4" 
-// data-gs-height="4">
-

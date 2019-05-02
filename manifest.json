@@ -8,7 +8,7 @@
 
     "content_scripts": [
       {
-        "matches": ["*://windacres.asuscomm.com/*", "*://192.168.1.132/*"],
+        "matches": ["*://windacres.asuscomm.com/*", "*://192.168.1.20/*"],
         "js": ["shinobi.js"]
       }
     ],
