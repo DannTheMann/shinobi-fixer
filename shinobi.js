@@ -1,7 +1,8 @@
 
 
-var SHUFFLE_SWITCH  = 10000;
-var SHUFFLE_MONITOR = "Inside";
+var SHUFFLE_SWITCH  = 3000;
+var SHUFFLE_MONITOR = "Indoor";
+var MID_WIDTH = 5;
 var MINUTES = 15;
 var TIME_BETWEEN_PAGE_REFRESH = (1000 * 60) * MINUTES;
 var SECONDS_BETWEEN_FEED_LOAD_ATTEMPTS = 5000;
@@ -15,38 +16,69 @@ var shuffleCounter = 0;
 /* All camera feeds */
 var feeds = [
     /* Top row */
-    new Feed("TopDrive",0,0),
-    new Feed("Drive",4,0),
-    new Feed("OutsideHouse",8,0),
+    new Feed(0,0, "TopDrive"),
+    new Feed(4,0, "Drive"),
+    new Feed(8,0, "OutsideHouse"),
 
     /* Middle row */
-    new Feed("LowerYard",0,6,4,7),
-    new Feed("UpperYard",4,6,4,7),
-    new Feed("OutsideSandschool",8,6,4,7),
+    new Feed(0,MID_WIDTH, "LowerYard"),
+    new Feed(4,MID_WIDTH, "UpperYard"),
+    new Feed(8,MID_WIDTH, "OutsideSandschool"),
 
     /* Bottom row */
-    new Feed("Chickens",0,13),
-    new Feed("InsideSandschool",4,13),
-    new Feed("TopYard",8,13)
+    new Feed(0,MID_WIDTH*2, ["Chickens", "Ducks", "Orchard"]),
+    new Feed(4,MID_WIDTH*2, ["Indoor", "Block"]),
+    new Feed(8,MID_WIDTH*2, ["TopYard", "SalTackroom", "LiveryTackroom"])
 ];
 
 /* Side bar menu from burger menu */
 var SideBarElement = document.getElementsByClassName("demo-layout")[0];
 
-function Feed(id, loc_x, loc_y, width=4, height=6){
+function Feed(loc_x, loc_y, id, width=4, height=5){
     this.id = id;
     this.location_x = loc_x;
     this.location_y = loc_y;
     this.size_x = width;
     this.size_y = height;
+    this.shuffleMonitor = true;
+    this.shuffleCounter = 0;
 
 	this.apply = function(){
-        this.element = document.querySelector('[id^=monitor_live_' + id + ']')
+        
+        if(Array.isArray(id))
+        {   
+            console.log("Feed: Shuffle monitor found - " + id);
+            this.shuffleMonitor = true;
+            this.monitor = id[0];   
+            this.id.forEach(monitorID => {
+                mon = document.querySelector('[id^=monitor_live_' + monitorID + ']')
+                /* If this monitor has not loaded yet, force it to reload */
+                if(mon == null)
+                {
+                    console.log("Feed: element (Shuffle) '" + this.monitor + "' is null. Cannot apply changes.");
+                    return 0;
+                }
+                console.log("Setting " + monitorID + " position");
+                mon.setAttribute("data-gs-x", this.location_x);
+                mon.setAttribute("data-gs-y", this.location_y);
+                mon.setAttribute("data-gs-width", this.size_x);
+                mon.setAttribute("data-gs-height", this.size_y);    
+                mon.style.zIndex = "0";            
+            }) 
+        }
+        else
+        {
+            console.log("Feed: Standard feed - " + id);
+            this.shuffleMonitor = false;
+            this.monitor = id;
+        }
+        this.element = document.querySelector('[id^=monitor_live_' + this.monitor + ']')
         if(this.element == null){
-            console.log("Feed: element '" + this.id + "' is null. Cannot apply changes.");
+            console.log("Feed: element '" + this.monitor + "' is null. Cannot apply changes.");
             return 0;
         }
-        console.log("Feed: ID: " + this.id + "(" + this.element.id + 
+        this.element.style.zIndex = "1"; 
+        console.log("Feed: ID: " + this.monitor + "(" + this.element.id + 
             ") | [" + this.location_x + "," + this.location_y + "] size: " +
              this.size_x + "x" + this.size_y);
         
@@ -70,6 +102,25 @@ function Feed(id, loc_x, loc_y, width=4, height=6){
             set = false;
         }
         return set;
+    }
+
+    this.shuffle = function()
+    {
+        if(this.shuffleMonitor)
+        {
+            console.log("ID=" + id);
+            this.element.style.zIndex = "0"; 
+            var newID = this.id[(++this.shuffleCounter) % this.id.length];
+            console.log("NEWID= " + newID);
+            this.element = document.querySelector('[id^=monitor_live_' + newID + ']')
+            this.element.style.zIndex = "1";
+            console.log("Next!")
+        }
+    }
+
+    this.canShuffle = function()
+    {
+        return Array.isArray(this.id)
     }
 
 }
@@ -119,6 +170,8 @@ function orderCameras(){
             return;
         }
     }
+    
+    /* Update shuffle feeds */
     shuffleFeed();
 }
 
@@ -154,72 +207,19 @@ function openFullscreen() {
 
 function shuffleFeed(){
     console.log("Organising shuffle feed.")
-    /* Shuffle bottom middle camera with any feeds not mentioning in our dict */
-    monitors = document.querySelectorAll('[id^="monitor_live_"]');
-    console.log("Monitors found: " + monitors + " [ " + monitors.length + "] -> SM: " + SHUFFLE_MONITOR);
-    spareMonitors.push(document.querySelector('[id^=monitor_live_' + SHUFFLE_MONITOR + ']'));
 
-    /* Find every monitor that isn't hardcoded into a set position */
-    monitors.forEach(monitorID => {
-        
-        var monitorStable = false;
+    this.feeds.forEach(mon => {
 
-        feeds.forEach(feed => {
+        console.log("Feed: " + mon.id + " | canShuffle=" + mon.canShuffle())
 
-            /* This monitor is hardcoded to a location, don't touch it */
-            if(feed.element.id == monitorID.id){
-                 monitorStable = true;
-            }
-
-        });
-
-        if(!monitorStable){
-            console.log("Shuffle: Adding monitor - " + monitorID.id);
-            spareMonitors.push(monitorID);
-        }
-    
-        /* Find our hard coded position for the shuffling to occur at */
-        if(monitorID.id == document.querySelector('[id^=monitor_live_' + SHUFFLE_MONITOR + ']').id)
+        if(mon.canShuffle())
         {
-            currentShuffleMonitor = monitorID;
-            console.log("Shuffle: Found " + monitorID.id);
-            console.log("Shuffle: Size " + monitorID.id 
-            + " X: " + currentShuffleMonitor.getAttribute("data-gs-x")
-            + " Y: " + currentShuffleMonitor.getAttribute("data-gs-y")
-            + " SizeX: " + currentShuffleMonitor.getAttribute("data-gs-width")
-            + " SizeY: " + currentShuffleMonitor.getAttribute("data-gs-height"));
+            mon.shuffle();
         }
 
-    });
+    })
 
-    /* Find every monitor that isn't hardcoded into a set position */
-    spareMonitors.forEach(monitorID => {
-        console.log("Shuffle: Organising " + monitorID.id)
-        monitorID.setAttribute("data-gs-x", currentShuffleMonitor.getAttribute("data-gs-x"));
-        monitorID.setAttribute("data-gs-y", currentShuffleMonitor.getAttribute("data-gs-y"));
-        monitorID.setAttribute("data-gs-width", currentShuffleMonitor.getAttribute("data-gs-width"));
-        monitorID.setAttribute("data-gs-height", currentShuffleMonitor.getAttribute("data-gs-height"));
-    });
-
-    console.log("Shuffle: Total Shuffle Monitors: " + spareMonitors.length)
-    console.log("Shuffle: Current - " + currentShuffleMonitor.id);
-
-    // Recursively timeout to change the spare monitor display
-
-    setTimeout(function(){spareMonitorDisplay()}, SHUFFLE_SWITCH);
-}
-
-function spareMonitorDisplay(){
-
-    console.log("Shuffle: spareMonitorDisplay " + currentShuffleMonitor.id);
-    // hide existing monitor
-    currentShuffleMonitor.style.zIndex = "0"; 
-
-    currentShuffleMonitor = spareMonitors[(++shuffleCounter) % spareMonitors.length];
-    
-    currentShuffleMonitor.style.zIndex = "1"; 
-
-    setTimeout(function(){spareMonitorDisplay();}, SHUFFLE_SWITCH);
+    setTimeout(function(){shuffleFeed()}, SHUFFLE_SWITCH);
 }
 
 function main(){
